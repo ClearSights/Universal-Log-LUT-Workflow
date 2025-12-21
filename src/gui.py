@@ -45,11 +45,25 @@ class RedirectText:
         pass
 
 
+def resource_path(relative_path):
+    """Get absolute path to resource, works for dev and for PyInstaller"""
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(os.path.dirname(__file__))
+
+    return os.path.join(base_path, relative_path)
+
+
 class LUTWorkflowGUI:
     def __init__(self, root):
         self.root = root
         self.root.title("Universal Log LUT Workflow")
         self.root.geometry("900x700")
+
+        # Set window icon
+        self._set_window_icon()
 
         # Configure style
         self.style = ttk.Style()
@@ -664,6 +678,33 @@ class LUTWorkflowGUI:
             resize_lut(input_path, output_path, target_size)
 
         self.run_in_thread(task, self.resize_console)
+
+    def _set_window_icon(self):
+        """Set the window icon for both development and PyInstaller"""
+        try:
+            if platform.system() == "Windows":
+                # Windows uses .ico files
+                icon_path = resource_path(os.path.join("static", "logo.ico"))
+                if os.path.exists(icon_path):
+                    self.root.iconbitmap(icon_path)
+            else:
+                # Linux/Mac: Try to use PIL to load .ico as PhotoImage
+                try:
+                    from PIL import Image, ImageTk
+
+                    icon_path = resource_path(os.path.join("static", "logo.ico"))
+                    if os.path.exists(icon_path):
+                        img = Image.open(icon_path)
+                        photo = ImageTk.PhotoImage(img)
+                        self.root.iconphoto(True, photo)
+                        # Keep a reference to prevent garbage collection
+                        self.root._icon_photo = photo
+                except ImportError:
+                    print("Warning: PIL not available for icon on Linux/Mac")
+                except Exception as e:
+                    print(f"Warning: Could not set window icon with PIL: {e}")
+        except Exception as e:
+            print(f"Warning: Could not set window icon: {e}")
 
     def change_theme(self, event=None):
         """Change the application theme"""
