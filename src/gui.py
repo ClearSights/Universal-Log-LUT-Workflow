@@ -5,6 +5,7 @@ Integrates all LUT processing tools in a user-friendly interface
 
 import os
 import sys
+import platform
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox, scrolledtext
 import threading
@@ -51,8 +52,34 @@ class LUTWorkflowGUI:
         self.root.geometry("900x700")
 
         # Configure style
-        style = ttk.Style()
-        style.theme_use("clam")
+        self.style = ttk.Style()
+
+        # Select default theme based on OS
+        default_theme = "clam"  # Default for Linux/Mac
+        if platform.system() == "Windows":
+            available_themes = self.style.theme_names()
+            if "vista" in available_themes:
+                default_theme = "vista"
+            elif "winnative" in available_themes:
+                default_theme = "winnative"
+
+        self.style.theme_use(default_theme)
+
+        # Theme selection frame at the top
+        theme_frame = ttk.Frame(root)
+        theme_frame.pack(fill="x", padx=5, pady=5)
+
+        ttk.Label(theme_frame, text="Theme:").pack(side="left", padx=5)
+        self.theme_var = tk.StringVar(value=self.style.theme_use())
+        theme_selector = ttk.Combobox(
+            theme_frame,
+            textvariable=self.theme_var,
+            values=sorted(self.style.theme_names()),
+            state="readonly",
+            width=15,
+        )
+        theme_selector.pack(side="left", padx=5)
+        theme_selector.bind("<<ComboboxSelected>>", self.change_theme)
 
         # Create notebook (tabbed interface)
         self.notebook = ttk.Notebook(root)
@@ -637,6 +664,18 @@ class LUTWorkflowGUI:
             resize_lut(input_path, output_path, target_size)
 
         self.run_in_thread(task, self.resize_console)
+
+    def change_theme(self, event=None):
+        """Change the application theme"""
+        selected_theme = self.theme_var.get()
+        try:
+            self.style.theme_use(selected_theme)
+            self.status_var.set(f"Theme changed to: {selected_theme}")
+        except Exception as e:
+            self.status_var.set(f"Failed to change theme: {e}")
+            messagebox.showerror(
+                "Theme Error", f"Could not apply theme '{selected_theme}': {e}"
+            )
 
 
 def main():
