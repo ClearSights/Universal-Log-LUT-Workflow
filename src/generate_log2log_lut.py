@@ -178,6 +178,9 @@ def generate_log_to_log_lut(
         target_name = normalized_target.replace(" ", "_").replace(".", "")
         out_path = f"{source_name}_to_{target_name}_{lut_size}.cube"
 
+    # Convert to absolute path for display
+    out_path = os.path.abspath(out_path)
+
     print(
         f"Generating LUT: {source_config['full_name']} -> {target_config['full_name']}"
     )
@@ -219,7 +222,7 @@ def generate_log_to_log_lut(
 
     # Save LUT
     colour.write_LUT(LUT, out_path)
-    print(f"✓ Success! Saved: {out_path}\n")
+    print(f"✓ Success! Saved: {os.path.abspath(out_path)}\n")
 
     return out_path
 
@@ -258,6 +261,7 @@ def generate_multiple_luts(
         target_logs = normalized_targets
 
     os.makedirs(output_dir, exist_ok=True)
+    output_dir = os.path.abspath(output_dir)
 
     print(f"Batch Generation: {normalized_source} -> [{', '.join(target_logs)}]")
     print("=" * 70)

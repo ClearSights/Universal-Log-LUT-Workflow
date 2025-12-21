@@ -68,7 +68,7 @@ def resize_lut(input_path, output_path, target_size):
         for val in new_data:
             f.write(f"{val[0]:.6f} {val[1]:.6f} {val[2]:.6f}\n")
 
-    print(f"Success! Saved {target_size} grid LUT to: {output_path}")
+    print(f"Success! Saved {target_size} grid LUT to: {os.path.abspath(output_path)}")
 
 
 def main():

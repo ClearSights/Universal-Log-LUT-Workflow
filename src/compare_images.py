@@ -500,7 +500,7 @@ def visualize_difference(
     if output_path:
         plt.savefig(output_path, dpi=150, bbox_inches="tight")
         plt.close()
-        return f"Visualization saved to: {output_path}"
+        return f"Visualization saved to: {os.path.abspath(output_path)}"
     else:
         plt.show()
         return None

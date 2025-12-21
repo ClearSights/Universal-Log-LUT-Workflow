@@ -57,7 +57,7 @@ def _combine_single_pair(lut1_path, lut2_path, output_path):
             os.makedirs(out_dir)
 
         colour.write_LUT(combined_lut, out_path)
-        print(f"[OK] Saved: {out_path}")
+        print(f"[OK] Saved: {os.path.abspath(out_path)}")
 
     except Exception as e:
         print(f"[ERROR] Failed combining {lut1_path} and {lut2_path}: {e}")

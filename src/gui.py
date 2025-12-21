@@ -540,18 +540,24 @@ class LUTWorkflowGUI:
         def task():
             source = self.gen_source.get()
             size = int(self.gen_size.get())
-            output_dir = self.gen_output_dir.get()
+            output_dir = os.path.abspath(self.gen_output_dir.get())
 
             if self.gen_mode.get() == "single":
                 target = self.gen_target.get()
                 if source == target:
                     raise ValueError("Source and target cannot be the same")
 
+                # Generate filename and place it in output_dir
+                source_name = source.replace(" ", "_").replace(".", "")
+                target_name = target.replace(" ", "_").replace(".", "")
+                out_filename = f"{source_name}_to_{target_name}_{size}.cube"
+                out_path = os.path.join(output_dir, out_filename)
+
                 generate_log_to_log_lut(
                     source_log=source,
                     target_log=target,
                     lut_size=size,
-                    out_path=None,  # Auto-generate filename
+                    out_path=out_path,
                 )
             else:  # batch mode
                 generate_multiple_luts(
@@ -562,9 +568,9 @@ class LUTWorkflowGUI:
 
     def concatenate_luts(self):
         def task():
-            input1 = self.concat_input1.get()
-            input2 = self.concat_input2.get()
-            output = self.concat_output.get()
+            input1 = os.path.abspath(self.concat_input1.get())
+            input2 = os.path.abspath(self.concat_input2.get())
+            output = os.path.abspath(self.concat_output.get())
             workers = self.concat_workers.get()
 
             if not input1 or not input2:
@@ -578,9 +584,13 @@ class LUTWorkflowGUI:
 
     def compare_images(self):
         def task():
-            input1 = self.compare_input1.get()
-            input2 = self.compare_input2.get()
-            output = self.compare_output.get()
+            input1 = os.path.abspath(self.compare_input1.get())
+            input2 = os.path.abspath(self.compare_input2.get())
+            output = (
+                os.path.abspath(self.compare_output.get())
+                if self.compare_output.get()
+                else None
+            )
             visualize = self.compare_visualize.get()
             amplification = self.compare_amplification.get()
             workers = self.compare_workers.get()
@@ -593,7 +603,7 @@ class LUTWorkflowGUI:
                     input1,
                     input2,
                     visualize=visualize,
-                    output_path=output if output else None,
+                    output_path=output,
                     amplification=amplification,
                 )
             else:  # batch mode
@@ -601,7 +611,7 @@ class LUTWorkflowGUI:
                     input1,
                     input2,
                     visualize=visualize,
-                    output_dir=output if output else None,
+                    output_dir=output,
                     amplification=amplification,
                     workers=workers,
                 )
@@ -610,7 +620,7 @@ class LUTWorkflowGUI:
 
     def resize_lut_action(self):
         def task():
-            input_path = self.resize_input.get()
+            input_path = os.path.abspath(self.resize_input.get())
             output_path = self.resize_output.get()
             target_size = int(self.resize_size.get())
 
@@ -621,6 +631,8 @@ class LUTWorkflowGUI:
             if not output_path:
                 base, ext = os.path.splitext(input_path)
                 output_path = f"{base}_{target_size}{ext}"
+            else:
+                output_path = os.path.abspath(output_path)
 
             resize_lut(input_path, output_path, target_size)
 
