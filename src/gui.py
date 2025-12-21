@@ -178,7 +178,7 @@ class LUTWorkflowGUI:
         console_frame.pack(fill="both", expand=True, pady=5)
 
         self.gen_console = scrolledtext.ScrolledText(
-            console_frame, height=15, state="disabled", bg="#1e1e1e", fg="#d4d4d4"
+            console_frame, height=15, state="disabled", bg="white", fg="black"
         )
         self.gen_console.pack(fill="both", expand=True)
 
@@ -276,7 +276,7 @@ class LUTWorkflowGUI:
         console_frame.pack(fill="both", expand=True, pady=5)
 
         self.concat_console = scrolledtext.ScrolledText(
-            console_frame, height=15, state="disabled", bg="#1e1e1e", fg="#d4d4d4"
+            console_frame, height=15, state="disabled", bg="white", fg="black"
         )
         self.concat_console.pack(fill="both", expand=True)
 
@@ -386,7 +386,7 @@ class LUTWorkflowGUI:
         console_frame.pack(fill="both", expand=True, pady=5)
 
         self.compare_console = scrolledtext.ScrolledText(
-            console_frame, height=15, state="disabled", bg="#1e1e1e", fg="#d4d4d4"
+            console_frame, height=15, state="disabled", bg="white", fg="black"
         )
         self.compare_console.pack(fill="both", expand=True)
 
@@ -451,7 +451,7 @@ class LUTWorkflowGUI:
         console_frame.pack(fill="both", expand=True, pady=5)
 
         self.resize_console = scrolledtext.ScrolledText(
-            console_frame, height=20, state="disabled", bg="#1e1e1e", fg="#d4d4d4"
+            console_frame, height=20, state="disabled", bg="white", fg="black"
         )
         self.resize_console.pack(fill="both", expand=True)
 
