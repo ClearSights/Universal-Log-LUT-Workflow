@@ -11,6 +11,8 @@ from tkinter import ttk, filedialog, messagebox, scrolledtext
 import threading
 import queue
 
+from i18n import TRANSLATIONS, SUPPORTED_LANGUAGES, detect_language
+
 # Import the backend modules
 try:
     from generate_log2log_lut import (
@@ -59,8 +61,10 @@ def resource_path(relative_path):
 class LUTWorkflowGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Universal Log LUT Workflow")
-        self.root.geometry("900x700")
+        self.current_lang = detect_language()
+        self._i18n_map = []
+        self.root.title(self.tr("window_title"))
+        self.root.geometry("900x800")
 
         # Set window icon
         self._set_window_icon()
@@ -79,14 +83,14 @@ class LUTWorkflowGUI:
 
         self.style.theme_use(default_theme)
 
-        # Theme selection frame at the top
-        theme_frame = ttk.Frame(root)
-        theme_frame.pack(fill="x", padx=5, pady=5)
+        # Theme and language selection frame at the top
+        top_frame = ttk.Frame(root)
+        top_frame.pack(fill="x", padx=5, pady=5)
 
-        ttk.Label(theme_frame, text="Theme:").pack(side="left", padx=5)
+        self._t(ttk.Label, top_frame, "theme_label").pack(side="left", padx=5)
         self.theme_var = tk.StringVar(value=self.style.theme_use())
         theme_selector = ttk.Combobox(
-            theme_frame,
+            top_frame,
             textvariable=self.theme_var,
             values=sorted(self.style.theme_names()),
             state="readonly",
@@ -94,6 +98,20 @@ class LUTWorkflowGUI:
         )
         theme_selector.pack(side="left", padx=5)
         theme_selector.bind("<<ComboboxSelected>>", self.change_theme)
+
+        ttk.Separator(top_frame, orient="vertical").pack(side="left", padx=10, fill="y")
+
+        self._t(ttk.Label, top_frame, "language_label").pack(side="left", padx=5)
+        self.lang_var = tk.StringVar(value=SUPPORTED_LANGUAGES[self.current_lang])
+        lang_selector = ttk.Combobox(
+            top_frame,
+            textvariable=self.lang_var,
+            values=list(SUPPORTED_LANGUAGES.values()),
+            state="readonly",
+            width=10,
+        )
+        lang_selector.pack(side="left", padx=5)
+        lang_selector.bind("<<ComboboxSelected>>", self.change_language)
 
         # Create notebook (tabbed interface)
         self.notebook = ttk.Notebook(root)
@@ -106,38 +124,58 @@ class LUTWorkflowGUI:
         self.create_resize_tab()
 
         # Status bar
-        self.status_var = tk.StringVar(value="Ready")
+        self.status_var = tk.StringVar(value=self.tr("status_ready"))
         status_bar = ttk.Label(
             root, textvariable=self.status_var, relief=tk.SUNKEN, anchor=tk.W
         )
         status_bar.pack(side=tk.BOTTOM, fill=tk.X)
 
+    def tr(self, key):
+        """Get translated string for current language"""
+        return TRANSLATIONS.get(self.current_lang, TRANSLATIONS["en"]).get(key, key)
+
+    def _t(self, widget_class, parent, key, **kwargs):
+        """Create a widget with translated text and register for language updates"""
+        w = widget_class(parent, text=self.tr(key), **kwargs)
+        self._i18n_map.append((w, key))
+        return w
+
     def create_generate_tab(self):
         """Tab 1: Generate Log-to-Log LUT"""
         tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Generate LUT")
+        self.notebook.add(tab, text=self.tr("tab_generate"))
 
         # Main frame with padding
         main_frame = ttk.Frame(tab, padding="10")
         main_frame.pack(fill="both", expand=True)
 
         # Mode selection
-        mode_frame = ttk.LabelFrame(main_frame, text="Mode", padding="5")
+        mode_frame = self._t(ttk.LabelFrame, main_frame, "mode", padding="5")
         mode_frame.pack(fill="x", pady=5)
 
         self.gen_mode = tk.StringVar(value="single")
-        ttk.Radiobutton(
-            mode_frame, text="Single Conversion", variable=self.gen_mode, value="single"
+        self._t(
+            ttk.Radiobutton,
+            mode_frame,
+            "single_conversion",
+            variable=self.gen_mode,
+            value="single",
         ).pack(side="left", padx=10)
-        ttk.Radiobutton(
-            mode_frame, text="Batch Conversion", variable=self.gen_mode, value="batch"
+        self._t(
+            ttk.Radiobutton,
+            mode_frame,
+            "batch_conversion",
+            variable=self.gen_mode,
+            value="batch",
         ).pack(side="left", padx=10)
 
         # Source log selection
-        source_frame = ttk.LabelFrame(main_frame, text="Source Log Format", padding="5")
+        source_frame = self._t(
+            ttk.LabelFrame, main_frame, "source_log_format", padding="5"
+        )
         source_frame.pack(fill="x", pady=5)
 
-        ttk.Label(source_frame, text="Source:").pack(side="left", padx=5)
+        self._t(ttk.Label, source_frame, "source").pack(side="left", padx=5)
         self.gen_source = ttk.Combobox(
             source_frame, values=list(LOG_CONFIGS.keys()), width=30, state="readonly"
         )
@@ -145,10 +183,12 @@ class LUTWorkflowGUI:
         self.gen_source.current(0)
 
         # Target log selection (for single mode)
-        target_frame = ttk.LabelFrame(main_frame, text="Target Log Format", padding="5")
+        target_frame = self._t(
+            ttk.LabelFrame, main_frame, "target_log_format", padding="5"
+        )
         target_frame.pack(fill="x", pady=5)
 
-        ttk.Label(target_frame, text="Target:").pack(side="left", padx=5)
+        self._t(ttk.Label, target_frame, "target").pack(side="left", padx=5)
         self.gen_target = ttk.Combobox(
             target_frame, values=list(LOG_CONFIGS.keys()), width=30, state="readonly"
         )
@@ -156,10 +196,10 @@ class LUTWorkflowGUI:
         self.gen_target.current(1)
 
         # LUT size
-        size_frame = ttk.LabelFrame(main_frame, text="LUT Size", padding="5")
+        size_frame = self._t(ttk.LabelFrame, main_frame, "lut_size", padding="5")
         size_frame.pack(fill="x", pady=5)
 
-        ttk.Label(size_frame, text="Grid Size:").pack(side="left", padx=5)
+        self._t(ttk.Label, size_frame, "grid_size").pack(side="left", padx=5)
         self.gen_size = ttk.Combobox(
             size_frame, values=[17, 33, 65, 129], width=10, state="readonly"
         )
@@ -167,28 +207,29 @@ class LUTWorkflowGUI:
         self.gen_size.set(65)
 
         # Output settings
-        output_frame = ttk.LabelFrame(main_frame, text="Output", padding="5")
+        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="5")
         output_frame.pack(fill="x", pady=5)
 
-        ttk.Label(output_frame, text="Output Directory:").pack(side="left", padx=5)
+        self._t(ttk.Label, output_frame, "output_directory").pack(side="left", padx=5)
         self.gen_output_dir = tk.StringVar(value=os.getcwd())
         ttk.Entry(output_frame, textvariable=self.gen_output_dir, width=40).pack(
             side="left", padx=5, fill="x", expand=True
         )
-        ttk.Button(
-            output_frame, text="Browse", command=self.browse_gen_output
+        self._t(
+            ttk.Button, output_frame, "browse", command=self.browse_gen_output
         ).pack(side="left", padx=5)
 
         # Generate button
-        ttk.Button(
+        self._t(
+            ttk.Button,
             main_frame,
-            text="Generate LUT",
+            "btn_generate_lut",
             command=self.generate_lut,
             style="Accent.TButton",
         ).pack(pady=10)
 
         # Console output
-        console_frame = ttk.LabelFrame(main_frame, text="Output Log", padding="5")
+        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="5")
         console_frame.pack(fill="both", expand=True, pady=5)
 
         self.gen_console = scrolledtext.ScrolledText(
@@ -199,24 +240,29 @@ class LUTWorkflowGUI:
     def create_concatenate_tab(self):
         """Tab 2: Concatenate LUTs"""
         tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Concatenate LUTs")
+        self.notebook.add(tab, text=self.tr("tab_concatenate"))
 
         main_frame = ttk.Frame(tab, padding="10")
         main_frame.pack(fill="both", expand=True)
 
         # Input 1
-        input1_frame = ttk.LabelFrame(
-            main_frame, text="First Input (Applied First)", padding="5"
+        input1_frame = self._t(
+            ttk.LabelFrame, main_frame, "first_input_applied_first", padding="5"
         )
         input1_frame.pack(fill="x", pady=5)
 
         self.concat_input1_type = tk.StringVar(value="file")
-        ttk.Radiobutton(
-            input1_frame, text="File", variable=self.concat_input1_type, value="file"
-        ).pack(side="left", padx=5)
-        ttk.Radiobutton(
+        self._t(
+            ttk.Radiobutton,
             input1_frame,
-            text="Directory",
+            "file",
+            variable=self.concat_input1_type,
+            value="file",
+        ).pack(side="left", padx=5)
+        self._t(
+            ttk.Radiobutton,
+            input1_frame,
+            "directory",
             variable=self.concat_input1_type,
             value="dir",
         ).pack(side="left", padx=5)
@@ -225,23 +271,31 @@ class LUTWorkflowGUI:
         ttk.Entry(input1_frame, textvariable=self.concat_input1, width=50).pack(
             side="left", padx=5, fill="x", expand=True
         )
-        ttk.Button(
-            input1_frame, text="Browse", command=lambda: self.browse_concat_input(1)
+        self._t(
+            ttk.Button,
+            input1_frame,
+            "browse",
+            command=lambda: self.browse_concat_input(1),
         ).pack(side="left", padx=5)
 
         # Input 2
-        input2_frame = ttk.LabelFrame(
-            main_frame, text="Second Input (Applied Second)", padding="5"
+        input2_frame = self._t(
+            ttk.LabelFrame, main_frame, "second_input_applied_second", padding="5"
         )
         input2_frame.pack(fill="x", pady=5)
 
         self.concat_input2_type = tk.StringVar(value="file")
-        ttk.Radiobutton(
-            input2_frame, text="File", variable=self.concat_input2_type, value="file"
-        ).pack(side="left", padx=5)
-        ttk.Radiobutton(
+        self._t(
+            ttk.Radiobutton,
             input2_frame,
-            text="Directory",
+            "file",
+            variable=self.concat_input2_type,
+            value="file",
+        ).pack(side="left", padx=5)
+        self._t(
+            ttk.Radiobutton,
+            input2_frame,
+            "directory",
             variable=self.concat_input2_type,
             value="dir",
         ).pack(side="left", padx=5)
@@ -250,43 +304,47 @@ class LUTWorkflowGUI:
         ttk.Entry(input2_frame, textvariable=self.concat_input2, width=50).pack(
             side="left", padx=5, fill="x", expand=True
         )
-        ttk.Button(
-            input2_frame, text="Browse", command=lambda: self.browse_concat_input(2)
+        self._t(
+            ttk.Button,
+            input2_frame,
+            "browse",
+            command=lambda: self.browse_concat_input(2),
         ).pack(side="left", padx=5)
 
         # Output
-        output_frame = ttk.LabelFrame(main_frame, text="Output", padding="5")
+        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="5")
         output_frame.pack(fill="x", pady=5)
 
-        ttk.Label(output_frame, text="Output Path:").pack(side="left", padx=5)
+        self._t(ttk.Label, output_frame, "output_path").pack(side="left", padx=5)
         self.concat_output = tk.StringVar(value=os.getcwd())
         ttk.Entry(output_frame, textvariable=self.concat_output, width=50).pack(
             side="left", padx=5, fill="x", expand=True
         )
-        ttk.Button(
-            output_frame, text="Browse", command=self.browse_concat_output
+        self._t(
+            ttk.Button, output_frame, "browse", command=self.browse_concat_output
         ).pack(side="left", padx=5)
 
         # Workers
         workers_frame = ttk.Frame(main_frame)
         workers_frame.pack(fill="x", pady=5)
 
-        ttk.Label(workers_frame, text="Parallel Workers:").pack(side="left", padx=5)
+        self._t(ttk.Label, workers_frame, "parallel_workers").pack(side="left", padx=5)
         self.concat_workers = tk.IntVar(value=4)
         ttk.Spinbox(
             workers_frame, from_=1, to=16, textvariable=self.concat_workers, width=10
         ).pack(side="left", padx=5)
 
         # Concatenate button
-        ttk.Button(
+        self._t(
+            ttk.Button,
             main_frame,
-            text="Concatenate LUTs",
+            "btn_concatenate_luts",
             command=self.concatenate_luts,
             style="Accent.TButton",
         ).pack(pady=10)
 
         # Console output
-        console_frame = ttk.LabelFrame(main_frame, text="Output Log", padding="5")
+        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="5")
         console_frame.pack(fill="both", expand=True, pady=5)
 
         self.concat_console = scrolledtext.ScrolledText(
@@ -295,7 +353,7 @@ class LUTWorkflowGUI:
         self.concat_console.pack(fill="both", expand=True)
 
         # Results
-        results_frame = ttk.LabelFrame(main_frame, text="Results", padding="5")
+        results_frame = self._t(ttk.LabelFrame, main_frame, "results", padding="5")
         results_frame.pack(fill="both", expand=True, pady=5)
 
         columns = ("name", "status", "clipped", "clip_ratio", "output")
@@ -304,11 +362,11 @@ class LUTWorkflowGUI:
         )
         self.concat_results_tree.pack(fill="both", expand=True)
 
-        self.concat_results_tree.heading("name", text="Name")
-        self.concat_results_tree.heading("status", text="Status")
-        self.concat_results_tree.heading("clipped", text="Clipped")
-        self.concat_results_tree.heading("clip_ratio", text="Clip %")
-        self.concat_results_tree.heading("output", text="Output")
+        self.concat_results_tree.heading("name", text=self.tr("col_name"))
+        self.concat_results_tree.heading("status", text=self.tr("col_status"))
+        self.concat_results_tree.heading("clipped", text=self.tr("col_clipped"))
+        self.concat_results_tree.heading("clip_ratio", text=self.tr("col_clip_ratio"))
+        self.concat_results_tree.heading("output", text=self.tr("col_output"))
 
         self.concat_results_tree.column("name", width=200)
         self.concat_results_tree.column("status", width=80, anchor="center")
@@ -319,63 +377,74 @@ class LUTWorkflowGUI:
     def create_compare_tab(self):
         """Tab 3: Compare Images"""
         tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Compare Images")
+        self.notebook.add(tab, text=self.tr("tab_compare"))
 
         main_frame = ttk.Frame(tab, padding="10")
         main_frame.pack(fill="both", expand=True)
 
         # Mode selection
-        mode_frame = ttk.LabelFrame(main_frame, text="Mode", padding="5")
+        mode_frame = self._t(ttk.LabelFrame, main_frame, "mode", padding="5")
         mode_frame.pack(fill="x", pady=5)
 
         self.compare_mode = tk.StringVar(value="single")
-        ttk.Radiobutton(
+        self._t(
+            ttk.Radiobutton,
             mode_frame,
-            text="Single Image Pair",
+            "single_image_pair",
             variable=self.compare_mode,
             value="single",
         ).pack(side="left", padx=10)
-        ttk.Radiobutton(
+        self._t(
+            ttk.Radiobutton,
             mode_frame,
-            text="Directory Comparison",
+            "directory_comparison",
             variable=self.compare_mode,
             value="batch",
         ).pack(side="left", padx=10)
 
         # Image 1 / Directory 1
-        input1_frame = ttk.LabelFrame(main_frame, text="First Input", padding="5")
+        input1_frame = self._t(ttk.LabelFrame, main_frame, "first_input", padding="5")
         input1_frame.pack(fill="x", pady=5)
 
         self.compare_input1 = tk.StringVar()
         ttk.Entry(input1_frame, textvariable=self.compare_input1, width=60).pack(
             side="left", padx=5, fill="x", expand=True
         )
-        ttk.Button(
-            input1_frame, text="Browse", command=lambda: self.browse_compare_input(1)
+        self._t(
+            ttk.Button,
+            input1_frame,
+            "browse",
+            command=lambda: self.browse_compare_input(1),
         ).pack(side="left", padx=5)
 
         # Image 2 / Directory 2
-        input2_frame = ttk.LabelFrame(main_frame, text="Second Input", padding="5")
+        input2_frame = self._t(ttk.LabelFrame, main_frame, "second_input", padding="5")
         input2_frame.pack(fill="x", pady=5)
 
         self.compare_input2 = tk.StringVar()
         ttk.Entry(input2_frame, textvariable=self.compare_input2, width=60).pack(
             side="left", padx=5, fill="x", expand=True
         )
-        ttk.Button(
-            input2_frame, text="Browse", command=lambda: self.browse_compare_input(2)
+        self._t(
+            ttk.Button,
+            input2_frame,
+            "browse",
+            command=lambda: self.browse_compare_input(2),
         ).pack(side="left", padx=5)
 
         # Options
-        options_frame = ttk.LabelFrame(main_frame, text="Options", padding="5")
+        options_frame = self._t(ttk.LabelFrame, main_frame, "options", padding="5")
         options_frame.pack(fill="x", pady=5)
 
         self.compare_visualize = tk.BooleanVar(value=True)
-        ttk.Checkbutton(
-            options_frame, text="Generate Visualization", variable=self.compare_visualize
+        self._t(
+            ttk.Checkbutton,
+            options_frame,
+            "generate_visualization",
+            variable=self.compare_visualize,
         ).pack(side="left", padx=10)
 
-        ttk.Label(options_frame, text="Amplification:").pack(side="left", padx=5)
+        self._t(ttk.Label, options_frame, "amplification").pack(side="left", padx=5)
         self.compare_amplification = tk.DoubleVar(value=1.0)
         ttk.Spinbox(
             options_frame,
@@ -386,7 +455,7 @@ class LUTWorkflowGUI:
             width=10,
         ).pack(side="left", padx=5)
 
-        ttk.Label(options_frame, text="Workers:").pack(side="left", padx=5)
+        self._t(ttk.Label, options_frame, "workers").pack(side="left", padx=5)
         self.compare_workers = tk.IntVar(value=4)
         ttk.Spinbox(
             options_frame,
@@ -397,28 +466,29 @@ class LUTWorkflowGUI:
         ).pack(side="left", padx=5)
 
         # Output
-        output_frame = ttk.LabelFrame(main_frame, text="Output", padding="5")
+        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="5")
         output_frame.pack(fill="x", pady=5)
 
-        ttk.Label(output_frame, text="Output Path:").pack(side="left", padx=5)
+        self._t(ttk.Label, output_frame, "output_path").pack(side="left", padx=5)
         self.compare_output = tk.StringVar(value=os.getcwd())
         ttk.Entry(output_frame, textvariable=self.compare_output, width=50).pack(
             side="left", padx=5, fill="x", expand=True
         )
-        ttk.Button(
-            output_frame, text="Browse", command=self.browse_compare_output
+        self._t(
+            ttk.Button, output_frame, "browse", command=self.browse_compare_output
         ).pack(side="left", padx=5)
 
         # Compare button
-        ttk.Button(
+        self._t(
+            ttk.Button,
             main_frame,
-            text="Compare Images",
+            "btn_compare_images",
             command=self.compare_images,
             style="Accent.TButton",
         ).pack(pady=10)
 
         # Console output
-        console_frame = ttk.LabelFrame(main_frame, text="Output Log", padding="5")
+        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="5")
         console_frame.pack(fill="both", expand=True, pady=5)
 
         self.compare_console = scrolledtext.ScrolledText(
@@ -429,28 +499,28 @@ class LUTWorkflowGUI:
     def create_resize_tab(self):
         """Tab 4: Resize LUT"""
         tab = ttk.Frame(self.notebook)
-        self.notebook.add(tab, text="Resize LUT")
+        self.notebook.add(tab, text=self.tr("tab_resize"))
 
         main_frame = ttk.Frame(tab, padding="10")
         main_frame.pack(fill="both", expand=True)
 
         # Input file
-        input_frame = ttk.LabelFrame(main_frame, text="Input LUT", padding="5")
+        input_frame = self._t(ttk.LabelFrame, main_frame, "input_lut", padding="5")
         input_frame.pack(fill="x", pady=5)
 
         self.resize_input = tk.StringVar()
         ttk.Entry(input_frame, textvariable=self.resize_input, width=60).pack(
             side="left", padx=5, fill="x", expand=True
         )
-        ttk.Button(input_frame, text="Browse", command=self.browse_resize_input).pack(
-            side="left", padx=5
-        )
+        self._t(
+            ttk.Button, input_frame, "browse", command=self.browse_resize_input
+        ).pack(side="left", padx=5)
 
         # Target size
-        size_frame = ttk.LabelFrame(main_frame, text="Target Size", padding="5")
+        size_frame = self._t(ttk.LabelFrame, main_frame, "target_size", padding="5")
         size_frame.pack(fill="x", pady=5)
 
-        ttk.Label(size_frame, text="New Grid Size:").pack(side="left", padx=5)
+        self._t(ttk.Label, size_frame, "new_grid_size").pack(side="left", padx=5)
         self.resize_size = ttk.Combobox(
             size_frame, values=[17, 33, 65, 129], width=10, state="readonly"
         )
@@ -458,32 +528,33 @@ class LUTWorkflowGUI:
         self.resize_size.set(33)
 
         # Output file
-        output_frame = ttk.LabelFrame(main_frame, text="Output", padding="5")
+        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="5")
         output_frame.pack(fill="x", pady=5)
 
-        ttk.Label(output_frame, text="Output File:").pack(side="left", padx=5)
+        self._t(ttk.Label, output_frame, "output_file").pack(side="left", padx=5)
         self.resize_output = tk.StringVar()
         ttk.Entry(output_frame, textvariable=self.resize_output, width=50).pack(
             side="left", padx=5, fill="x", expand=True
         )
-        ttk.Button(
-            output_frame, text="Browse", command=self.browse_resize_output
+        self._t(
+            ttk.Button, output_frame, "browse", command=self.browse_resize_output
         ).pack(side="left", padx=5)
 
-        ttk.Label(
-            output_frame, text="(Leave empty to auto-generate)", foreground="gray"
-        ).pack(side="left", padx=5)
+        self._t(ttk.Label, output_frame, "auto_generate_hint", foreground="gray").pack(
+            side="left", padx=5
+        )
 
         # Resize button
-        ttk.Button(
+        self._t(
+            ttk.Button,
             main_frame,
-            text="Resize LUT",
+            "btn_resize_lut",
             command=self.resize_lut_action,
             style="Accent.TButton",
         ).pack(pady=10)
 
         # Console output
-        console_frame = ttk.LabelFrame(main_frame, text="Output Log", padding="5")
+        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="5")
         console_frame.pack(fill="both", expand=True, pady=5)
 
         self.resize_console = scrolledtext.ScrolledText(
@@ -580,11 +651,11 @@ class LUTWorkflowGUI:
 
             try:
                 func()
-                self.status_var.set("Operation completed successfully")
+                self.status_var.set(self.tr("status_completed"))
             except Exception as e:
                 print(f"\nError: {e}")
-                self.status_var.set(f"Error: {e}")
-                messagebox.showerror("Error", str(e))
+                self.status_var.set(self.tr("status_error").format(e))
+                messagebox.showerror(self.tr("error_title"), str(e))
             finally:
                 # Restore stdout/stderr
                 sys.stdout = original_stdout
@@ -595,7 +666,7 @@ class LUTWorkflowGUI:
         console_widget.delete(1.0, tk.END)
         console_widget.configure(state="disabled")
 
-        self.status_var.set("Processing...")
+        self.status_var.set(self.tr("status_processing"))
         thread = threading.Thread(target=wrapper, daemon=True)
         thread.start()
 
@@ -639,7 +710,7 @@ class LUTWorkflowGUI:
             if self.gen_mode.get() == "single":
                 target = self.gen_target.get()
                 if source == target:
-                    raise ValueError("Source and target cannot be the same")
+                    raise ValueError(self.tr("error_same_source_target"))
 
                 # Generate filename and place it in output_dir
                 source_name = source.replace(" ", "_").replace(".", "")
@@ -668,9 +739,9 @@ class LUTWorkflowGUI:
             workers = self.concat_workers.get()
 
             if not input1 or not input2:
-                raise ValueError("Please specify both inputs")
+                raise ValueError(self.tr("error_specify_both_inputs"))
             if not output:
-                raise ValueError("Please specify output path")
+                raise ValueError(self.tr("error_specify_output"))
 
             results = process_luts(input1, input2, output, max_workers=workers)
             self.root.after(0, lambda: self.update_concat_results(results))
@@ -691,7 +762,7 @@ class LUTWorkflowGUI:
             workers = self.compare_workers.get()
 
             if not input1 or not input2:
-                raise ValueError("Please specify both inputs")
+                raise ValueError(self.tr("error_specify_both_inputs"))
 
             if self.compare_mode.get() == "single":
                 compare_px_diff(
@@ -720,7 +791,7 @@ class LUTWorkflowGUI:
             target_size = int(self.resize_size.get())
 
             if not input_path:
-                raise ValueError("Please specify input file")
+                raise ValueError(self.tr("error_specify_input"))
 
             # Auto-generate output filename if not specified
             if not output_path:
@@ -765,12 +836,49 @@ class LUTWorkflowGUI:
         selected_theme = self.theme_var.get()
         try:
             self.style.theme_use(selected_theme)
-            self.status_var.set(f"Theme changed to: {selected_theme}")
+            self.status_var.set(self.tr("theme_changed").format(selected_theme))
         except Exception as e:
-            self.status_var.set(f"Failed to change theme: {e}")
+            self.status_var.set(self.tr("status_error").format(e))
             messagebox.showerror(
-                "Theme Error", f"Could not apply theme '{selected_theme}': {e}"
+                self.tr("theme_error_title"),
+                self.tr("theme_error_msg").format(selected_theme, e),
             )
+
+    def change_language(self, event=None):
+        """Change the application language"""
+        selected_name = self.lang_var.get()
+        for code, name in SUPPORTED_LANGUAGES.items():
+            if name == selected_name:
+                self.current_lang = code
+                break
+        self._refresh_language()
+
+    def _refresh_language(self):
+        """Update all UI text to current language"""
+        self.root.title(self.tr("window_title"))
+
+        # Update all registered widgets
+        for widget, key in self._i18n_map:
+            widget.configure(text=self.tr(key))
+
+        # Update notebook tabs
+        tab_keys = ["tab_generate", "tab_concatenate", "tab_compare", "tab_resize"]
+        for i, key in enumerate(tab_keys):
+            self.notebook.tab(i, text=self.tr(key))
+
+        # Update treeview headings
+        heading_map = {
+            "name": "col_name",
+            "status": "col_status",
+            "clipped": "col_clipped",
+            "clip_ratio": "col_clip_ratio",
+            "output": "col_output",
+        }
+        for col, key in heading_map.items():
+            self.concat_results_tree.heading(col, text=self.tr(key))
+
+        # Update status bar
+        self.status_var.set(self.tr("status_ready"))
 
 
 def main():
