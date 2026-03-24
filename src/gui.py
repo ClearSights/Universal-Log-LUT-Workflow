@@ -113,17 +113,17 @@ class LUTWorkflowGUI:
 
     def _set_window_icon(self):
         """Set the window icon for both development and PyInstaller"""
+        icon_path = resource_path(os.path.join("..", "static", "logo.ico"))
         try:
             if platform.system() == "Windows":
-                icon_path = resource_path(os.path.join("static", "logo.ico"))
                 if os.path.exists(icon_path):
                     self.root.iconbitmap(icon_path)
             else:
                 try:
                     from PIL import Image, ImageTk
 
-                    icon_path = resource_path(os.path.join("static", "logo.ico"))
                     if os.path.exists(icon_path):
+                        print(f"Found icon at: {icon_path}")
                         img = Image.open(icon_path)
                         photo = ImageTk.PhotoImage(img)
                         self.root.iconphoto(True, photo)
