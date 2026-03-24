@@ -64,7 +64,15 @@ class LUTWorkflowGUI:
         self.current_lang = detect_language()
         self._i18n_map = []
         self.root.title(self.tr("window_title"))
-        self.root.geometry("900x800")
+
+        # Size window to 80% of screen and center it
+        screen_w = self.root.winfo_screenwidth()
+        screen_h = self.root.winfo_screenheight()
+        win_w = min(max(int(screen_w * 0.55), 1024), 1400)
+        win_h = min(max(int(screen_h * 0.75), 768), 1050)
+        x = (screen_w - win_w) // 2
+        y = (screen_h - win_h) // 2
+        self.root.geometry(f"{win_w}x{win_h}+{x}+{y}")
 
         # Set window icon
         self._set_window_icon()
