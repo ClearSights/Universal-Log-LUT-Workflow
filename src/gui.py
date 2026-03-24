@@ -882,7 +882,30 @@ class LUTWorkflowGUI:
 
 
 def main():
+    # Enable DPI awareness for sharp rendering on high-DPI displays
+    if platform.system() == "Windows":
+        import ctypes
+
+        try:
+            # Per-monitor DPI aware (Windows 8.1+)
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        except Exception:
+            try:
+                # System DPI aware (fallback)
+                ctypes.windll.user32.SetProcessDPIAware()
+            except Exception:
+                pass
+
     root = tk.Tk()
+
+    # Scale UI elements based on actual screen DPI
+    try:
+        dpi = root.winfo_fpixels("1i")
+        scale_factor = dpi / 72.0
+        root.tk.call("tk", "scaling", scale_factor)
+    except Exception:
+        pass
+
     app = LUTWorkflowGUI(root)
     root.mainloop()
 
