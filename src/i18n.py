@@ -29,7 +29,7 @@ TRANSLATIONS = {
         # Generate tab
         "mode": "Mode",
         "single_conversion": "Create Single LUT",
-        "batch_conversion": "Batch Create LUTs (Fixed Source Format)",
+        "batch_conversion": "Batch Create LUTs(Source Format Fixed)",
         "source_log_format": "Source Log Format",
         "source": "Source:",
         "target_log_format": "Target Log Format",
