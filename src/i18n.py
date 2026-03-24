@@ -127,14 +127,14 @@ TRANSLATIONS = {
         "col_clip_ratio": "裁切比例",
         "col_output": "输出",
         # 对比标签页
-        "single_image_pair": "单张图像对比",
+        "single_image_pair": "单组图像对比",
         "directory_comparison": "批量对比（文件夹）",
         "first_input": "第一张/组图像",
         "second_input": "第二张/组图像",
         "options": "选项",
         "generate_visualization": "生成可视化对比图",
         "amplification": "放大倍数：",
-        "workers": "线程数：",
+        "workers": "并行线程数：",
         "btn_compare_images": "开始对比",
         # 调整规格标签页
         "input_lut": "输入 LUT",

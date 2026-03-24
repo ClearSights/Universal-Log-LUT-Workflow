@@ -91,6 +91,11 @@ class LUTWorkflowGUI:
 
         self.style.theme_use(default_theme)
 
+        # Add padding to tab headers and widgets for better spacing
+        self.style.configure("TNotebook.Tab", padding=[16, 8])
+        self.style.configure("TLabelframe", padding=10)
+        self.style.configure("TLabelframe.Label", padding=[4, 2])
+
         # Theme and language selection frame at the top
         top_frame = ttk.Frame(root)
         top_frame.pack(fill="x", padx=5, pady=5)
@@ -123,7 +128,7 @@ class LUTWorkflowGUI:
 
         # Create notebook (tabbed interface)
         self.notebook = ttk.Notebook(root)
-        self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
+        self.notebook.pack(fill="both", expand=True, padx=10, pady=(5, 10))
 
         # Create tabs
         self.create_generate_tab()
@@ -154,12 +159,12 @@ class LUTWorkflowGUI:
         self.notebook.add(tab, text=self.tr("tab_generate"))
 
         # Main frame with padding
-        main_frame = ttk.Frame(tab, padding="10")
+        main_frame = ttk.Frame(tab, padding="15")
         main_frame.pack(fill="both", expand=True)
 
         # Mode selection
-        mode_frame = self._t(ttk.LabelFrame, main_frame, "mode", padding="5")
-        mode_frame.pack(fill="x", pady=5)
+        mode_frame = self._t(ttk.LabelFrame, main_frame, "mode", padding="8")
+        mode_frame.pack(fill="x", pady=(0, 8))
 
         self.gen_mode = tk.StringVar(value="single")
         self._t(
@@ -179,9 +184,9 @@ class LUTWorkflowGUI:
 
         # Source log selection
         source_frame = self._t(
-            ttk.LabelFrame, main_frame, "source_log_format", padding="5"
+            ttk.LabelFrame, main_frame, "source_log_format", padding="8"
         )
-        source_frame.pack(fill="x", pady=5)
+        source_frame.pack(fill="x", pady=(0, 8))
 
         self._t(ttk.Label, source_frame, "source").pack(side="left", padx=5)
         self.gen_source = ttk.Combobox(
@@ -192,9 +197,9 @@ class LUTWorkflowGUI:
 
         # Target log selection (for single mode)
         target_frame = self._t(
-            ttk.LabelFrame, main_frame, "target_log_format", padding="5"
+            ttk.LabelFrame, main_frame, "target_log_format", padding="8"
         )
-        target_frame.pack(fill="x", pady=5)
+        target_frame.pack(fill="x", pady=(0, 8))
 
         self._t(ttk.Label, target_frame, "target").pack(side="left", padx=5)
         self.gen_target = ttk.Combobox(
@@ -204,8 +209,8 @@ class LUTWorkflowGUI:
         self.gen_target.current(1)
 
         # LUT size
-        size_frame = self._t(ttk.LabelFrame, main_frame, "lut_size", padding="5")
-        size_frame.pack(fill="x", pady=5)
+        size_frame = self._t(ttk.LabelFrame, main_frame, "lut_size", padding="8")
+        size_frame.pack(fill="x", pady=(0, 8))
 
         self._t(ttk.Label, size_frame, "grid_size").pack(side="left", padx=5)
         self.gen_size = ttk.Combobox(
@@ -215,8 +220,8 @@ class LUTWorkflowGUI:
         self.gen_size.set(65)
 
         # Output settings
-        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="5")
-        output_frame.pack(fill="x", pady=5)
+        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="8")
+        output_frame.pack(fill="x", pady=(0, 8))
 
         self._t(ttk.Label, output_frame, "output_directory").pack(side="left", padx=5)
         self.gen_output_dir = tk.StringVar(value=os.getcwd())
@@ -237,8 +242,8 @@ class LUTWorkflowGUI:
         ).pack(pady=10)
 
         # Console output
-        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="5")
-        console_frame.pack(fill="both", expand=True, pady=5)
+        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="8")
+        console_frame.pack(fill="both", expand=True, pady=(0, 4))
 
         self.gen_console = scrolledtext.ScrolledText(
             console_frame, height=15, state="disabled", bg="white", fg="black"
@@ -250,14 +255,14 @@ class LUTWorkflowGUI:
         tab = ttk.Frame(self.notebook)
         self.notebook.add(tab, text=self.tr("tab_concatenate"))
 
-        main_frame = ttk.Frame(tab, padding="10")
+        main_frame = ttk.Frame(tab, padding="15")
         main_frame.pack(fill="both", expand=True)
 
         # Input 1
         input1_frame = self._t(
-            ttk.LabelFrame, main_frame, "first_input_applied_first", padding="5"
+            ttk.LabelFrame, main_frame, "first_input_applied_first", padding="8"
         )
-        input1_frame.pack(fill="x", pady=5)
+        input1_frame.pack(fill="x", pady=(0, 8))
 
         self.concat_input1_type = tk.StringVar(value="file")
         self._t(
@@ -288,9 +293,9 @@ class LUTWorkflowGUI:
 
         # Input 2
         input2_frame = self._t(
-            ttk.LabelFrame, main_frame, "second_input_applied_second", padding="5"
+            ttk.LabelFrame, main_frame, "second_input_applied_second", padding="8"
         )
-        input2_frame.pack(fill="x", pady=5)
+        input2_frame.pack(fill="x", pady=(0, 8))
 
         self.concat_input2_type = tk.StringVar(value="file")
         self._t(
@@ -320,8 +325,8 @@ class LUTWorkflowGUI:
         ).pack(side="left", padx=5)
 
         # Output
-        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="5")
-        output_frame.pack(fill="x", pady=5)
+        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="8")
+        output_frame.pack(fill="x", pady=(0, 8))
 
         self._t(ttk.Label, output_frame, "output_path").pack(side="left", padx=5)
         self.concat_output = tk.StringVar(value=os.getcwd())
@@ -334,7 +339,7 @@ class LUTWorkflowGUI:
 
         # Workers
         workers_frame = ttk.Frame(main_frame)
-        workers_frame.pack(fill="x", pady=5)
+        workers_frame.pack(fill="x", pady=(0, 4))
 
         self._t(ttk.Label, workers_frame, "parallel_workers").pack(side="left", padx=5)
         self.concat_workers = tk.IntVar(value=4)
@@ -352,8 +357,8 @@ class LUTWorkflowGUI:
         ).pack(pady=10)
 
         # Console output
-        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="5")
-        console_frame.pack(fill="both", expand=True, pady=5)
+        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="8")
+        console_frame.pack(fill="both", expand=True, pady=(0, 8))
 
         self.concat_console = scrolledtext.ScrolledText(
             console_frame, height=15, state="disabled", bg="white", fg="black"
@@ -361,8 +366,8 @@ class LUTWorkflowGUI:
         self.concat_console.pack(fill="both", expand=True)
 
         # Results
-        results_frame = self._t(ttk.LabelFrame, main_frame, "results", padding="5")
-        results_frame.pack(fill="both", expand=True, pady=5)
+        results_frame = self._t(ttk.LabelFrame, main_frame, "results", padding="8")
+        results_frame.pack(fill="both", expand=True, pady=(0, 4))
 
         columns = ("name", "status", "clipped", "clip_ratio", "output")
         self.concat_results_tree = ttk.Treeview(
@@ -387,12 +392,12 @@ class LUTWorkflowGUI:
         tab = ttk.Frame(self.notebook)
         self.notebook.add(tab, text=self.tr("tab_compare"))
 
-        main_frame = ttk.Frame(tab, padding="10")
+        main_frame = ttk.Frame(tab, padding="15")
         main_frame.pack(fill="both", expand=True)
 
         # Mode selection
-        mode_frame = self._t(ttk.LabelFrame, main_frame, "mode", padding="5")
-        mode_frame.pack(fill="x", pady=5)
+        mode_frame = self._t(ttk.LabelFrame, main_frame, "mode", padding="8")
+        mode_frame.pack(fill="x", pady=(0, 8))
 
         self.compare_mode = tk.StringVar(value="single")
         self._t(
@@ -411,8 +416,8 @@ class LUTWorkflowGUI:
         ).pack(side="left", padx=10)
 
         # Image 1 / Directory 1
-        input1_frame = self._t(ttk.LabelFrame, main_frame, "first_input", padding="5")
-        input1_frame.pack(fill="x", pady=5)
+        input1_frame = self._t(ttk.LabelFrame, main_frame, "first_input", padding="8")
+        input1_frame.pack(fill="x", pady=(0, 8))
 
         self.compare_input1 = tk.StringVar()
         ttk.Entry(input1_frame, textvariable=self.compare_input1, width=60).pack(
@@ -426,8 +431,8 @@ class LUTWorkflowGUI:
         ).pack(side="left", padx=5)
 
         # Image 2 / Directory 2
-        input2_frame = self._t(ttk.LabelFrame, main_frame, "second_input", padding="5")
-        input2_frame.pack(fill="x", pady=5)
+        input2_frame = self._t(ttk.LabelFrame, main_frame, "second_input", padding="8")
+        input2_frame.pack(fill="x", pady=(0, 8))
 
         self.compare_input2 = tk.StringVar()
         ttk.Entry(input2_frame, textvariable=self.compare_input2, width=60).pack(
@@ -441,8 +446,8 @@ class LUTWorkflowGUI:
         ).pack(side="left", padx=5)
 
         # Options
-        options_frame = self._t(ttk.LabelFrame, main_frame, "options", padding="5")
-        options_frame.pack(fill="x", pady=5)
+        options_frame = self._t(ttk.LabelFrame, main_frame, "options", padding="8")
+        options_frame.pack(fill="x", pady=(0, 8))
 
         self.compare_visualize = tk.BooleanVar(value=True)
         self._t(
@@ -474,8 +479,8 @@ class LUTWorkflowGUI:
         ).pack(side="left", padx=5)
 
         # Output
-        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="5")
-        output_frame.pack(fill="x", pady=5)
+        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="8")
+        output_frame.pack(fill="x", pady=(0, 8))
 
         self._t(ttk.Label, output_frame, "output_path").pack(side="left", padx=5)
         self.compare_output = tk.StringVar(value=os.getcwd())
@@ -496,8 +501,8 @@ class LUTWorkflowGUI:
         ).pack(pady=10)
 
         # Console output
-        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="5")
-        console_frame.pack(fill="both", expand=True, pady=5)
+        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="8")
+        console_frame.pack(fill="both", expand=True, pady=(0, 4))
 
         self.compare_console = scrolledtext.ScrolledText(
             console_frame, height=15, state="disabled", bg="white", fg="black"
@@ -509,12 +514,12 @@ class LUTWorkflowGUI:
         tab = ttk.Frame(self.notebook)
         self.notebook.add(tab, text=self.tr("tab_resize"))
 
-        main_frame = ttk.Frame(tab, padding="10")
+        main_frame = ttk.Frame(tab, padding="15")
         main_frame.pack(fill="both", expand=True)
 
         # Input file
-        input_frame = self._t(ttk.LabelFrame, main_frame, "input_lut", padding="5")
-        input_frame.pack(fill="x", pady=5)
+        input_frame = self._t(ttk.LabelFrame, main_frame, "input_lut", padding="8")
+        input_frame.pack(fill="x", pady=(0, 8))
 
         self.resize_input = tk.StringVar()
         ttk.Entry(input_frame, textvariable=self.resize_input, width=60).pack(
@@ -525,8 +530,8 @@ class LUTWorkflowGUI:
         ).pack(side="left", padx=5)
 
         # Target size
-        size_frame = self._t(ttk.LabelFrame, main_frame, "target_size", padding="5")
-        size_frame.pack(fill="x", pady=5)
+        size_frame = self._t(ttk.LabelFrame, main_frame, "target_size", padding="8")
+        size_frame.pack(fill="x", pady=(0, 8))
 
         self._t(ttk.Label, size_frame, "new_grid_size").pack(side="left", padx=5)
         self.resize_size = ttk.Combobox(
@@ -536,8 +541,8 @@ class LUTWorkflowGUI:
         self.resize_size.set(33)
 
         # Output file
-        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="5")
-        output_frame.pack(fill="x", pady=5)
+        output_frame = self._t(ttk.LabelFrame, main_frame, "output", padding="8")
+        output_frame.pack(fill="x", pady=(0, 8))
 
         self._t(ttk.Label, output_frame, "output_file").pack(side="left", padx=5)
         self.resize_output = tk.StringVar()
@@ -562,8 +567,8 @@ class LUTWorkflowGUI:
         ).pack(pady=10)
 
         # Console output
-        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="5")
-        console_frame.pack(fill="both", expand=True, pady=5)
+        console_frame = self._t(ttk.LabelFrame, main_frame, "output_log", padding="8")
+        console_frame.pack(fill="both", expand=True, pady=(0, 4))
 
         self.resize_console = scrolledtext.ScrolledText(
             console_frame, height=20, state="disabled", bg="white", fg="black"
